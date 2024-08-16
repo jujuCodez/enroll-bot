@@ -206,16 +206,26 @@ elif choice == 3:
     keyboard.add_hotkey('ctrl+shift+q', lambda: exit())
 elif choice == 4:
     wait_for_real_page(driver)
-    print("Option 2 selected")
+    print("Option 4 selected")
     time.sleep(1)
-    driver.find_element(By.NAME, "userid").send_keys(username)
-    driver.find_element(By.NAME, "pwd").send_keys(password)
-    print("login done")
-    driver.find_element(By.NAME, "Submit").click()
-    driver.implicitly_wait(5)
-    driver.get(
-        "https://animo.sys.dlsu.edu.ph/psp/ps/EMPLOYEE/HRMS/s/WEBLIB_PTPP_SC.HOMEPAGE.FieldFormula.IScript_AppHP?pt_fname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE&IsFolder=true")
-    driver.find_element(By.ID, "fldra_HCCC_ENROLLMENT").click()
+    while True:  # Start an infinite loop
+        try:
+            time.sleep(1)
+            driver.find_element(By.NAME, "userid").send_keys(username)
+            driver.find_element(By.NAME, "pwd").send_keys(password)
+            print("Login attempt...")
+            driver.find_element(By.XPATH, "//input[@value='Sign In' and @name='Submit']").click()
+            driver.implicitly_wait(5)
+            driver.get(
+                "https://animo.sys.dlsu.edu.ph/psp/ps/EMPLOYEE/HRMS/s/WEBLIB_PTPP_SC.HOMEPAGE.FieldFormula.IScript_AppHP?pt_fname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE&IsFolder=true")
+
+            # Attempt to find the HCCC_ENROLLMENT element
+            driver.find_element(By.ID, "fldra_HCCC_ENROLLMENT").click()
+            print("HCCC_ENROLLMENT found and clicked.")
+            break  # Exit the loop if successful
+        except Exception as e:
+            print("Failed to find HCCC_ENROLLMENT, retrying login...")
+            driver.get(url)  # Reset to the login page and try again
     driver.find_element(By.XPATH, "//a[contains(text(),'Enrollment: Add Classes')]").click()
     time.sleep(2)
     driver.switch_to.frame('ptifrmtgtframe')
