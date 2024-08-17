@@ -46,7 +46,6 @@ async function sendMessage(title, body) {
 }
 
 async function scanTable(page) {
-  // Navigate only if not already on the page
   if (!page.url().includes('view_course_offerings')) {
     await page.goto('https://enroll.dlsu.edu.ph/dlsu/view_course_offerings', {
       waitUntil: 'domcontentloaded'
@@ -57,11 +56,8 @@ async function scanTable(page) {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  // Clear the course code input field
   await page.$eval('input[name="p_course_code"]', el => el.value = '');
-  
-  // Enter the course code and click the button
-  await page.type('input[name="p_course_code"]', 'LBYCPF3');
+  await page.type('input[name="p_course_code"]', 'GEWORLD');
   await new Promise(resolve => setTimeout(resolve, 500));
   await page.click('input[name="p_button"]');
   await new Promise(resolve => setTimeout(resolve, 500));
@@ -78,10 +74,10 @@ async function scanTable(page) {
 }
 
 function compareData(previous, current) {
-  if (!previous) return null;
-  
+  if (!previous || !current) return null;
+
   const changes = [];
-  for (let i = 1; i < current.length; i++) {
+  for (let i = 1; i < Math.min(current.length, previous.length); i++) {
     if (current[i][6] !== previous[i][6] || current[i][7] !== previous[i][7]) {
       changes.push({
         course: current[i][1],
@@ -98,12 +94,53 @@ function compareData(previous, current) {
 
 function logChanges(changes) {
   const logMessage = `[${new Date().toISOString()}] Changes detected:\n${JSON.stringify(changes, null, 2)}\n\n`;
-  
-  // Log to terminal
+
   console.log(logMessage);
-  
-  // Log to file
   fs.appendFileSync('enrollment_changes_LBYCPF3.log', logMessage, 'utf8');
+}
+
+async function runScan(page) {
+  try {
+    const currentData = await scanTable(page);
+    const changes = compareData(previousData, currentData);
+
+    if (changes) {
+      const changeMessage = `Changes detected:\n${changes.map(change => `Course: ${change.course} \nSection: ${change.section}, \nprevEnrolled: ${change.prevEnrolled}, \nnewEnrolled: ${change.newEnrolled}`).join('\n')}`;
+      logChanges(changes);
+      sendNotification('Course Enrollment Changes', changeMessage);
+      await sendMessage('Course Enrollment Changes GEWORLD', changeMessage);
+    } else {
+      console.log(`[${new Date().toISOString()}] No changes detected`);
+    }
+
+    previousData = currentData;
+
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Error during scan:`, error);
+
+    // Handle errors more gracefully
+    try {
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      console.log(`[${new Date().toISOString()}] Page refreshed due to error.`);
+      // Retry scan after refresh
+      const currentData = await scanTable(page);
+      const changes = compareData(previousData, currentData);
+
+      if (changes) {
+        const changeMessage = `Changes detected:\n${changes.map(change => `Course: ${change.course} \nSection: ${change.section}, \nprevEnrolled: ${change.prevEnrolled}, \nnewEnrolled: ${change.newEnrolled}`).join('\n')}`;
+        logChanges(changes);
+        sendNotification('Course Enrollment Changes', changeMessage);
+        await sendMessage('Course Enrollment Changes', changeMessage);
+      } else {
+        console.log(`[${new Date().toISOString()}] No changes detected after refresh`);
+      }
+
+      previousData = currentData;
+
+    } catch (refreshError) {
+      console.error(`[${new Date().toISOString()}] Error during page refresh:`, refreshError);
+    }
+  }
 }
 
 async function main() {
@@ -119,63 +156,15 @@ async function main() {
     fpconfig: {},
   });
 
-  // Send initial notification and email
-  const initialMessage = 'Service has started';
-  sendNotification('Course Enrollment Monitoring', initialMessage);
-  await sendMessage('Course Enrollment Monitoring', initialMessage);
   console.log('Course Enrollment Monitoring service has started');
 
-  async function runScan() {
-    try {
-      const currentData = await scanTable(page);
-      const changes = compareData(previousData, currentData);
-      
-      if (changes) {
-        const changeMessage = `Changes detected:\n${changes.map(change => `Section: ${change.section}, prevEnrolled: ${change.prevEnrolled}, newEnrolled: ${change.newEnrolled}`).join('\n')}`;
-        logChanges(changes);
-        sendNotification('Course Enrollment Changes', changeMessage);
-        await sendMessage('Course Enrollment Changes', changeMessage); // Send the changes via email using Courier
-      } else {
-        console.log(`[${new Date().toISOString()}] No changes detected`);
-      }
-  
-      previousData = currentData;
-  
-    } catch (error) {
-      console.error(`[${new Date().toISOString()}] Error during scan:`, error);
-  
-      // Refresh the page and reattempt scan
-      try {
-        await page.reload({ waitUntil: 'domcontentloaded' });
-        console.log(`[${new Date().toISOString()}] Page refreshed due to error.`);
-        // Retry scan after refresh
-        const currentData = await scanTable(page);
-        const changes = compareData(previousData, currentData);
-  
-        if (changes) {
-          const changeMessage = `Changes detected:\n${changes.map(change => `Section: ${change.section}, prevEnrolled: ${change.prevEnrolled}, newEnrolled: ${change.newEnrolled}`).join('\n')}`;
-          logChanges(changes);
-          sendNotification('Course Enrollment Changes', changeMessage);
-          await sendMessage('Course Enrollment Changes', changeMessage); // Send the changes via email using Courier
-        } else {
-          console.log(`[${new Date().toISOString()}] No changes detected after refresh`);
-        }
-  
-        previousData = currentData;
-  
-      } catch (refreshError) {
-        console.error(`[${new Date().toISOString()}] Error during page refresh:`, refreshError);
-      }
-    }
+  async function scanLoop() {
+    await runScan(page);
+    // Repeat scan after a delay
+    setTimeout(scanLoop, 5000); // Adjust as needed
   }
-  
 
-  // Run initial scan
-  await runScan();
-
-  // Set up interval for automatic scanning every 3 seconds
-  const scanInterval = 5000; // 1 second in milliseconds
-  setInterval(runScan, scanInterval);
+  scanLoop();
 
   console.log('Automatic scanning started. Press Ctrl+C to exit.');
 }
