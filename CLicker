@@ -275,24 +275,36 @@ elif choice == 3:
     # To exit the entire script, you can use another hotkey:
     keyboard.add_hotkey('ctrl+shift+q', lambda: exit())
 elif choice == 4:
+    def toggle_running():
+        global running
+        running = not running
+        print(f"{'Pausing' if not running else 'Resuming'} the process...")
+
+
+    # Assign a hotkey to pause/resume the loop
+    keyboard.add_hotkey('ctrl+shift+s', toggle_running)
+
+    # To exit the entire script, you can use another hotkey:
+    keyboard.add_hotkey('ctrl+shift+q', lambda: exit())
+    running = True
     driver.get(url)
     wait_for_real_page(driver)
     print("Option 4 selected")
     time.sleep(1)
-    while True:  # Start an infinite loop
+
+    while True:  # Start an infinite loop for login attempts
         try:
             time.sleep(1)
             driver.find_element(By.NAME, "userid").send_keys(username)
             driver.find_element(By.NAME, "pwd").send_keys(password)
             print("Login attempt...")
             driver.find_element(By.CLASS_NAME, "psloginbutton").click()
-            driver.find_element(By.NAME, "userid").send_keys(username)
-            driver.find_element(By.NAME, "pwd").send_keys(password)
-            driver.find_element(By.CLASS_NAME, "psloginbutton").click()
+
             time.sleep(5)
             driver.get(
                 "https://animo.sys.dlsu.edu.ph/psp/ps/EMPLOYEE/HRMS/s/WEBLIB_PTPP_SC.HOMEPAGE.FieldFormula.IScript_AppHP?pt_fname=CO_EMPLOYEE_SELF_SERVICE&FolderPath=PORTAL_ROOT_OBJECT.CO_EMPLOYEE_SELF_SERVICE&IsFolder=true")
             time.sleep(5)
+
             # Attempt to find the HCCC_ENROLLMENT element
             driver.find_element(By.ID, "fldra_HCCC_ENROLLMENT").click()
             print("HCCC_ENROLLMENT found and clicked.")
@@ -300,12 +312,24 @@ elif choice == 4:
         except Exception as e:
             print("Failed to find HCCC_ENROLLMENT, retrying login...")
             driver.get(url)  # Reset to the login page and try again
-    while True:  # Start an infinite loop
-        try:
-            driver.find_element(By.XPATH, "//a[contains(text(),'Enrollment: Add Classes')]").click()
-            time.sleep(3)
-            driver.find_element(By.XPATH, "//a[contains(text(),'My Weekly Schedule')]").click()
-            time.sleep(3)
-        except Exception as e:
-            print(f"Error occurred: {str(e)}")
-            break  # Exit the loop if an error occurs
+
+    while True:  # Start another loop for the enrollment process
+        while running:
+            try:
+                # Click on "Enrollment: Add Classes"
+                driver.find_element(By.XPATH, "//a[contains(text(),'Enrollment: Add Classes')]").click()
+                print("Clicked 'Enrollment: Add Classes'")
+                time.sleep(3)  # Adjust this sleep as needed
+
+                # Click on "My Weekly Schedule"
+                driver.find_element(By.XPATH, "//a[contains(text(),'My Weekly Schedule')]").click()
+                print("Clicked 'My Weekly Schedule'")
+                time.sleep(3)  # Adjust this sleep as needed
+
+            except Exception as e:
+                print(f"Error occurred: {str(e)}")
+                # Handle any exceptions here if needed
+                break
+
+        # Prevent CPU overuse when paused
+        time.sleep(0.1)
