@@ -1,1 +1,1 @@
-# ominaBOT
+# enrollment bot
