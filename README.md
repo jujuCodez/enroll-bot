@@ -1,8 +1,8 @@
-# DLSU Enrollment Bot 🧠📚
+# Enrollment Bot 🧠📚
 
-An automation script built with **Selenium** to assist DLSU students in automating course **enrollment**, **class swapping**, and **retry-based registration** on the [Animo.sys Portal](http://animo.sys.dlsu.edu.ph/). Designed to reduce the hassle of manual enrollment by looping through tasks, detecting Cloudflare issues, and retrying failed attempts.
+An automation script built with **Selenium** to assist students in automating course **enrollment**, **class swapping**, and **retry-based registration** on university enrollment portals. Designed to reduce the hassle of manual enrollment by looping through tasks, detecting Cloudflare issues, and retrying failed attempts.
 
-> ⚠️ For educational use only. This project is not affiliated with or endorsed by De La Salle University.
+> ⚠️ For educational use only. This project is not affiliated with or endorsed by any university.
 
 ---
 
@@ -15,7 +15,7 @@ An automation script built with **Selenium** to assist DLSU students in automati
   - `Ctrl+Shift+S` → Pause/Resume loop
   - `Ctrl+Shift+Q` → Exit script
 - 🧩 Compatible with Firefox and Geckodriver
-- 🧪 Tested on DLSU Animo.sys portal (PeopleSoft system)
+- 🧪 Tested on a PeopleSoft-based enrollment system
 
 ---
 
@@ -46,7 +46,7 @@ An automation script built with **Selenium** to assist DLSU students in automati
 
 1. **Update your credentials** and class codes in `main-bot.py`:
    ```python
-   username = "YOUR_DLSU_ID"
+   username = "YOUR_STUDENT_ID"
    password = "YOUR_PASSWORD"
    class_codes = ["1234", "5678"]
    ```
@@ -82,7 +82,7 @@ An automation script built with **Selenium** to assist DLSU students in automati
 
 ## 🛡️ Disclaimer
 
-This tool is intended for **personal use only**. Use responsibly and avoid abusing the DLSU systems. This bot mimics human behavior but is still subject to CAPTCHA, rate limits, and university IT policies.
+This tool is intended for **personal use only**. Use responsibly and avoid abusing academic systems. This bot mimics human behavior but is still subject to CAPTCHA, rate limits, and institutional policies.
 
 ---
 
@@ -94,7 +94,5 @@ MIT License. Feel free to fork and adapt, but don’t sell or redistribute witho
 
 ## 💡 Author
 
-Developed by a Computer Engineering student from De La Salle University.  
+Developed by a Computer Engineering student.  
 Questions or feedback? Feel free to open an issue or fork a pull request.
-
-```
