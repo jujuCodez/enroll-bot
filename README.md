@@ -1,8 +1,3 @@
-Here’s a complete and polished `README.md` for your **DLSU Enrollment Bot**, suitable for GitHub:
-
----
-
-```markdown
 # DLSU Enrollment Bot 🧠📚
 
 An automation script built with **Selenium** to assist DLSU students in automating course **enrollment**, **class swapping**, and **retry-based registration** on the [Animo.sys Portal](http://animo.sys.dlsu.edu.ph/). Designed to reduce the hassle of manual enrollment by looping through tasks, detecting Cloudflare issues, and retrying failed attempts.
